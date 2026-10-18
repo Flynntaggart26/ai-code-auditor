@@ -80,10 +80,28 @@ class SecurityScanner(ast.NodeVisitor):
             skip = any(k.arg == "usedforsecurity" for k in node.keywords)
             if not skip:
                 self.add(node, "B106", "MEDIUM", "Zayif hash", "sha256 / bcrypt / argon2 kullan.")
+        if name in ("random.random", "random.randint", "random.choice", "random.randrange"):
+            self.add(node, "B115", "MEDIUM", "Kriptografide zayif random", "secrets modulu kullanin.")
+        if name in ("telnetlib.Telnet", "ftplib.FTP"):
+            self.add(node, "B116", "HIGH", "Cleartext protokol", "ssh / https kullanin.")
+        if name in ("ssl._create_unverified_context",):
+            self.add(node, "B117", "HIGH", "Sertifika dogrulama atlandi", "Dogrulanmis SSL context kullanin.")
+        if name in ("socket.bind",) or name.endswith(".bind"):
+            for a in node.args:
+                if isinstance(a, ast.Tuple) and a.elts:
+                    h = a.elts[0]
+                    if isinstance(h, ast.Constant) and h.value in ("0.0.0.0", ""):
+                        self.add(node, "B113", "MEDIUM", "Soket 0.0.0.0'a bind", "Spesifik interface + auth kullanin.")
+        if name in ("tempfile.mktemp",):
+            self.add(node, "B114", "MEDIUM", "Guvensiz gecici dosya", "tempfile.mkstemp() kullanin.")
         if name.startswith("requests."):
             for kw in node.keywords:
                 if kw.arg == "verify" and isinstance(kw.value, ast.Constant) and kw.value.value is False:
                     self.add(node, "B110", "HIGH", "verify=False", "TLS dogrulamayi acik birak.")
+        if name in ("app.run", "flask.Flask.run"):
+            for kw in node.keywords:
+                if kw.arg == "debug" and isinstance(kw.value, ast.Constant) and kw.value.value is True:
+                    self.add(node, "B111", "MEDIUM", "Flask debug uretimde", "debug=False yapin.")
         if name.endswith(".execute") or name == "execute":
             if node.args:
                 q = node.args[0]
@@ -97,6 +115,9 @@ class SecurityScanner(ast.NodeVisitor):
                 if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str) and len(node.value.value) > 3:
                     self.add(node, "B108", "HIGH", f"Hardcoded secret: {t.id}", ".env + secret manager kullan.")
         self.generic_visit(node)
+    def visit_Assert(self, node):
+        self.add(node, "B107", "LOW", "Assert uretim kodunda", "python -O assertleri siler. if + raise kullanin.")
+        self.generic_visit(node)
     def visit_ExceptHandler(self, node):
         if node.type is None:
             self.add(node, "B112", "LOW", "Ciplak except", "Spesifik exception yakala.")
@@ -109,6 +130,18 @@ def scan_file(path):
         src = f.read()
     tree = ast.parse(src, filename=path)
     sc = SecurityScanner(path); sc.visit(tree)
+    # taint: kullanici girdisi -> tehlikeli fonksiyon akisi
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(Path(__file__).parent))
+        from scanner.taint import taint_flows
+        for fl in taint_flows(tree):
+            sc.findings.append({"file": path, "func": "<taint>", "line": fl["line"],
+                "rule_id": "TAINT", "severity": "HIGH",
+                "title": f"Tainted veri akisi -> {fl['sink']}",
+                "detail": "Kullanici girdisi dogrudan tehlikeli fonksiyona ulasiyor. Validate + parametreli API kullanin."})
+    except Exception:
+        pass
     return sc.findings
 def get_src(path, s, e):
     with open(path, encoding="utf-8") as f:

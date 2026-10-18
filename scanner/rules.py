@@ -1,0 +1,22 @@
+"""Kural paketi: her kural id -> aciklama + oneri."""
+RULES = {
+    "B101": {"title": "Dinamik kod calistirma", "fix": "ast.literal_eval veya whitelist kullanin."},
+    "B102": {"title": "OS komut enjeksiyonu", "fix": "subprocess.run(liste, shell=False) kullanin."},
+    "B103": {"title": "subprocess shell=True", "fix": "shell=False + liste arguman kullanin."},
+    "B104": {"title": "Guvenilmez deserialization", "fix": "json kullanin, pickle yerine."},
+    "B105": {"title": "yaml SafeLoader eksik", "fix": "yaml.safe_load() kullanin."},
+    "B106": {"title": "Zayif kriptografik hash", "fix": "sha256 / bcrypt / argon2 kullanin."},
+    "B107": {"title": "Assert uretim kodunda", "fix": "assert yerine explicit if + raise kullanin (python -O assertleri siler)."},
+    "B108": {"title": "Hardcoded secret", "fix": ".env + secret manager kullanin."},
+    "B109": {"title": "SQL enjeksiyonu", "fix": "Parametreli sorgu (? / %s) kullanin."},
+    "B110": {"title": "TLS dogrulama kapali", "fix": "verify=False kaldirin."},
+    "B111": {"title": "Flask debug uretimde", "fix": "debug=False yapin."},
+    "B112": {"title": "Hatali exception handling", "fix": "Spesifik exception + logging kullanin."},
+    "B113": {"title": "Soket bind 0.0.0.0", "fix": "Spesifik interface'e bind edin veya auth ekleyin."},
+    "B114": {"title": "Gecici dosya guvensiz", "fix": "tempfile.mkstemp() kullanin."},
+    "B115": {"title": "Random kriptografide", "fix": "secrets modulu kullanin."},
+    "B116": {"title": "Telnet/ftp cleartext", "fix": "ssh / https kullanin."},
+    "B117": {"title": "Sertifika dogrulama atlama", "fix": "ssl._create_unverified_context kaldirin."},
+    "COMPLEXITY": {"title": "Asiri karmasik fonksiyon", "fix": "Fonksiyonu kucuk parcalara bolun."},
+    "TAINT": {"title": "Kullanici girdisi tehlikeli fonksiyona ulasiyor", "fix": "Girdiyi validate edin + parametreli API kullanin."},
+}

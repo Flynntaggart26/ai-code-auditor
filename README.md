@@ -25,10 +25,13 @@ streamlit run dashboard.py
 3. No secrets needed: users paste their own free key in the sidebar (BYOK).
 
 ## Rules
-B101 eval/exec, B102 os.system, B103 shell=True, B104 pickle, B105 yaml, B106 weak hash, B108 hardcoded secret, B109 SQLi, B110 verify=False, B112 bare except, COMPLEXITY.
+B101 eval/exec, B102 os.system, B103 shell=True, B104 pickle, B105 yaml, B106 weak hash, B107 assert, B108 hardcoded secret, B109 SQLi, B110 verify=False, B111 flask debug, B112 bare except, B113 socket 0.0.0.0, B114 mktemp, B115 weak random, B116 telnet/ftp, B117 unverified SSL, TAINT (user input flow), COMPLEXITY.
 
 ## Roadmap
 - [x] Local AST scanner
-- [x] BYOK dashboard
-- [ ] Pre-commit hook
-- [ ] Folder scan + JSON report
+- [x] BYOK dashboard (file + ZIP + reports)
+- [x] Pre-commit hook (1-click Windows)
+- [x] Folder scan + JSON report
+- [x] VS Code tasks
+- [x] Taint tracking + pytest
+
