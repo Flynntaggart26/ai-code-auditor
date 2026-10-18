@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🛡️ Tara: Açık Dosya",
+      "type": "shell",
+      "command": "python ${workspaceFolder}/auditor.py ${file} --no-ai",
+      "presentation": { "reveal": "always", "panel": "new", "focus": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "🛡️ Tara: Tüm Proje + JSON",
+      "type": "shell",
+      "command": "python ${workspaceFolder}/auditor.py ${workspaceFolder} --no-ai --json ${workspaceFolder}/report.json",
+      "presentation": { "reveal": "always", "panel": "new", "focus": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "📊 Dashboard Aç",
+      "type": "shell",
+      "command": "streamlit run ${workspaceFolder}/dashboard.py",
+      "presentation": { "reveal": "always", "panel": "new", "focus": true },
+      "problemMatcher": []
+    }
+  ]
+}
