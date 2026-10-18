@@ -21,7 +21,7 @@ with st.sidebar:
     lang = st.radio("Rapor dili", ["TR", "EN"], horizontal=True)
     st.divider()
     st.markdown("[📄 Ücretsiz API anahtarı al](https://aistudio.google.com/)")
-    st.markdown("[⭐ GitHub](https://github.com/)")
+    st.markdown("[⭐ GitHub](https://github.com/Flynntaggart26/ai-code-auditor)")
 
 def show_metrics(findings):
     c1, c2, c3, c4 = st.columns(4)
