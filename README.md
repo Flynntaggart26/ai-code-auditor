@@ -1,9 +1,9 @@
 # AI-Powered Code Security Auditor
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ai-code-auditor-fly.streamlit.app)
 [![Audit](https://github.com/Flynntaggart26/ai-code-auditor/actions/workflows/audit.yml/badge.svg)](https://github.com/Flynntaggart26/ai-code-auditor/actions)
 
-**Live demo:** deployee başlayınca link buraya gelecek.
+**Live demo:** https://ai-code-auditor-fly.streamlit.app
 
 Free, offline-first Python security scanner for students. $0 cost with BYOK.
 
