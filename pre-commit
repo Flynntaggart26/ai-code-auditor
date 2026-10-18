@@ -1,0 +1,17 @@
+#!/bin/sh
+# pre-commit: HIGH bulgu varsa commiti durdurur. $0 maliyet (AI yok).
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$' || true)
+if [ -z "$STAGED" ]; then exit 0; fi
+echo "[auditor] taraniyor..."
+TMPJSON=$(mktemp)
+python auditor.py . --no-ai --json "$TMPJSON" --fail-on HIGH > /dev/null 2>&1
+CODE=$?
+if [ $CODE -ne 0 ]; then
+  echo "[auditor] HIGH bulgu var, commit durduruldu. Detay:"
+  python -c "import json,sys; d=json.load(open(sys.argv[1])); [print(f\"  [{x['severity']}] {x['file']}:{x['line']} {x['rule_id']} {x['title']}\") for x in d if x['severity']=='HIGH']" "$TMPJSON"
+  rm -f "$TMPJSON"
+  echo "Gecmek icin: git commit --no-verify (onerilmez)"
+  exit 1
+fi
+rm -f "$TMPJSON"
+echo "[auditor] temiz."
