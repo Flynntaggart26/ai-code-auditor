@@ -5,4 +5,6 @@ __pycache__/
 .env
 audit_cache.db
 report.json
+report.html
 results.sarif
+*.fixed.py

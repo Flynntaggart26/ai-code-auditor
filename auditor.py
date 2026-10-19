@@ -189,7 +189,7 @@ def audit_file(path, use_ai=True):
                 print(f"  AI soruluyor: {f['func']}")
                 save_audit_to_cache(h, f["func"], path, f["severity"], analyze_ai(raw, f['title']))
     return findings
-def audit_path(target, use_ai=True, json_out=None, sarif_out=None, fail_on=None):
+def audit_path(target, use_ai=True, json_out=None, sarif_out=None, fail_on=None, html_out=None, auto_fix=False):
     import json as _json
     from pathlib import Path as _P
     t = _P(target)
@@ -217,10 +217,16 @@ def audit_path(target, use_ai=True, json_out=None, sarif_out=None, fail_on=None)
             print(f"SKIP hata: {fp} ({e})")
     order = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
     all_f.sort(key=lambda x: (order.get(x["severity"], 3), x["file"], x["line"]))
-    print(f"\nOZET: {len(files)} dosya, {len(all_f)} bulgu "
-          f"(HIGH:{sum(1 for x in all_f if x['severity']=='HIGH')} "
-          f"MEDIUM:{sum(1 for x in all_f if x['severity']=='MEDIUM')} "
-          f"LOW:{sum(1 for x in all_f if x['severity']=='LOW')})")
+    try:
+        from scanner.score import compute_score
+        sc = compute_score(all_f)
+        print(f"\nSECURITY SCORE: {sc.value}/100 ({sc.grade}) "
+              f"(HIGH:{sc.high} MEDIUM:{sc.medium} LOW:{sc.low}) — {len(files)} files, {len(all_f)} findings")
+    except Exception:
+        print(f"\nOZET: {len(files)} dosya, {len(all_f)} bulgu "
+              f"(HIGH:{sum(1 for x in all_f if x['severity']=='HIGH')} "
+              f"MEDIUM:{sum(1 for x in all_f if x['severity']=='MEDIUM')} "
+              f"LOW:{sum(1 for x in all_f if x['severity']=='LOW')})")
     if json_out:
         with open(json_out, "w", encoding="utf-8") as f:
             _json.dump(all_f, f, ensure_ascii=False, indent=2)
@@ -229,6 +235,22 @@ def audit_path(target, use_ai=True, json_out=None, sarif_out=None, fail_on=None)
         from scanner.sarif import write_sarif
         write_sarif(all_f, sarif_out)
         print(f"SARIF rapor: {sarif_out}")
+    if html_out:
+        from scanner.report import write_html
+        write_html(all_f, html_out, target=target)
+        print(f"HTML report: {html_out}")
+    if auto_fix and t.is_file():
+        from scanner.autofix import apply_fixes
+        with open(str(t), encoding="utf-8") as fh:
+            src = fh.read()
+        fixed_src, n = apply_fixes(src, [x for x in all_f if x["file"] == str(t)])
+        if n:
+            out = str(t) + ".fixed.py"
+            with open(out, "w", encoding="utf-8") as fh:
+                fh.write(fixed_src)
+            print(f"AUTO-FIX: {n} fixes -> {out} (review before using!)")
+        else:
+            print("AUTO-FIX: no safe fixes applicable.")
     if fail_on:
         rank = {"LOW": 1, "MEDIUM": 2, "HIGH": 3}
         thr = rank.get(fail_on.upper(), 3)
@@ -239,11 +261,14 @@ def audit_path(target, use_ai=True, json_out=None, sarif_out=None, fail_on=None)
     return all_f
 if __name__ == "__main__":
     import argparse as _ap
-    ap = _ap.ArgumentParser(description="AI Code Auditor")
+    ap = _ap.ArgumentParser(description="SafeCode AI — offline Python security scanner with auto-fix")
     ap.add_argument("target", nargs="?", default="sample_vulnerable.py")
     ap.add_argument("--no-ai", action="store_true")
     ap.add_argument("--json", default=None)
-    ap.add_argument("--sarif", default=None, help="SARIF 2.1.0 ciktisi (GitHub Code Scanning)")
+    ap.add_argument("--sarif", default=None, help="SARIF 2.1.0 output (GitHub Code Scanning)")
+    ap.add_argument("--html", default=None, help="Self-contained HTML report")
+    ap.add_argument("--fix", action="store_true", help="Write safe auto-fixes to <file>.fixed.py")
     ap.add_argument("--fail-on", default=None, help="HIGH/MEDIUM/LOW")
     a = ap.parse_args()
-    audit_path(a.target, use_ai=not a.no_ai, json_out=a.json, sarif_out=a.sarif, fail_on=a.fail_on)
+    audit_path(a.target, use_ai=not a.no_ai, json_out=a.json, sarif_out=a.sarif, fail_on=a.fail_on,
+               html_out=a.html, auto_fix=a.fix)
