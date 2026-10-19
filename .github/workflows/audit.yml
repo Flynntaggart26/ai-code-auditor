@@ -1,5 +1,8 @@
 name: code-audit
 on: [push, pull_request]
+permissions:
+  contents: read
+  security-events: write
 jobs:
   audit:
     runs-on: ubuntu-latest
@@ -8,9 +11,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python auditor.py . --no-ai --json report.json
+      - run: pip install pytest
+      - run: python auditor.py . --no-ai --json report.json --sarif results.sarif
       - run: python -m pytest tests/ -q
       - uses: actions/upload-artifact@v4
         with:
           name: audit-report
-          path: report.json
+          path: |
+            report.json
+            results.sarif
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: results.sarif
+

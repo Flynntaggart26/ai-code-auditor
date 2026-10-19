@@ -189,7 +189,7 @@ def audit_file(path, use_ai=True):
                 print(f"  AI soruluyor: {f['func']}")
                 save_audit_to_cache(h, f["func"], path, f["severity"], analyze_ai(raw, f['title']))
     return findings
-def audit_path(target, use_ai=True, json_out=None, fail_on=None):
+def audit_path(target, use_ai=True, json_out=None, sarif_out=None, fail_on=None):
     import json as _json
     from pathlib import Path as _P
     t = _P(target)
@@ -225,6 +225,10 @@ def audit_path(target, use_ai=True, json_out=None, fail_on=None):
         with open(json_out, "w", encoding="utf-8") as f:
             _json.dump(all_f, f, ensure_ascii=False, indent=2)
         print(f"JSON rapor: {json_out}")
+    if sarif_out:
+        from scanner.sarif import write_sarif
+        write_sarif(all_f, sarif_out)
+        print(f"SARIF rapor: {sarif_out}")
     if fail_on:
         rank = {"LOW": 1, "MEDIUM": 2, "HIGH": 3}
         thr = rank.get(fail_on.upper(), 3)
@@ -239,6 +243,7 @@ if __name__ == "__main__":
     ap.add_argument("target", nargs="?", default="sample_vulnerable.py")
     ap.add_argument("--no-ai", action="store_true")
     ap.add_argument("--json", default=None)
+    ap.add_argument("--sarif", default=None, help="SARIF 2.1.0 ciktisi (GitHub Code Scanning)")
     ap.add_argument("--fail-on", default=None, help="HIGH/MEDIUM/LOW")
     a = ap.parse_args()
-    audit_path(a.target, use_ai=not a.no_ai, json_out=a.json, fail_on=a.fail_on)
+    audit_path(a.target, use_ai=not a.no_ai, json_out=a.json, sarif_out=a.sarif, fail_on=a.fail_on)
