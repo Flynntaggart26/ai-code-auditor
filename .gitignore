@@ -1,5 +1,8 @@
 venv/
 __pycache__/
+.pytest_cache/
 *.pyc
 .env
 audit_cache.db
+report.json
+results.sarif

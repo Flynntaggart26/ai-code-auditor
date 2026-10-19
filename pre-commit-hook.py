@@ -13,7 +13,6 @@ if os.path.basename(os.path.dirname(os.path.abspath(__file__))).lower() == "hook
     REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 else:
     REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
-AUDITOR = os.path.join(REPO_ROOT, "auditor.py")
 
 def staged_py_files():
     try:
