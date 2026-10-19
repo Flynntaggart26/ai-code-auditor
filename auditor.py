@@ -116,6 +116,10 @@ class SecurityScanner(ast.NodeVisitor):
                     self.add(node, "B108", "HIGH", f"Hardcoded secret: {t.id}", ".env + secret manager kullan.")
         self.generic_visit(node)
     def visit_Assert(self, node):
+        # test dosyalarindaki assertleri atla (pytest/kaynak kalite araci degiliz)
+        if "test" in self.path.lower() or "conftest" in self.path.lower():
+            self.generic_visit(node)
+            return
         self.add(node, "B107", "LOW", "Assert uretim kodunda", "python -O assertleri siler. if + raise kullanin.")
         self.generic_visit(node)
     def visit_ExceptHandler(self, node):
@@ -132,15 +136,13 @@ def scan_file(path):
     sc = SecurityScanner(path); sc.visit(tree)
     # taint: kullanici girdisi -> tehlikeli fonksiyon akisi
     try:
-        import sys as _sys
-        _sys.path.insert(0, str(Path(__file__).parent))
         from scanner.taint import taint_flows
         for fl in taint_flows(tree):
             sc.findings.append({"file": path, "func": "<taint>", "line": fl["line"],
                 "rule_id": "TAINT", "severity": "HIGH",
                 "title": f"Tainted veri akisi -> {fl['sink']}",
                 "detail": "Kullanici girdisi dogrudan tehlikeli fonksiyona ulasiyor. Validate + parametreli API kullanin."})
-    except Exception:
+    except ImportError:
         pass
     return sc.findings
 def get_src(path, s, e):
@@ -199,7 +201,7 @@ def audit_path(target, use_ai=True, json_out=None, fail_on=None):
         for p in sorted(t.rglob("*.py")):
             if any(s in p.parts for s in skip):
                 continue
-            if p.name in {"auditor.py", "dashboard.py", "sample_vulnerable.py"}:
+            if p.name in {"auditor.py", "dashboard.py", "sample_vulnerable.py", "streamlit_app.py", "pre-commit-hook.py"}:
                 pass
             files.append(str(p))
     else:
